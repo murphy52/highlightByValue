@@ -21,7 +21,7 @@ ExampleS
         ignoreZero:             false,               //bit Ignores any cells that equal 0                       
         dataAttribute:          null,                //str Name of custom data atribute in your table. "https://www.w3schools.com/tags/att_data-.asp" Highlight based on values on data attribute instead of cell
         showTitleTags:          true,                //bit
-        blendColor:             false 
+        blendColor:             false                //bit Belnds new color with existing color of cell. This will also concat new title tag to existing
     }
  ```   
 2. You can define just the tableId and every column will be highlighted
