@@ -5,7 +5,7 @@ Higlights all or specific highest and lowest values in table columns or rows.
 ExampleS
 
 1. Here is an example with every setting defined
-
+```
  highlightByValue({
         tableId :               'myTable',           //str REQUIRED. ID of table
         color:                  'rgb(0,145,0)',      //rgb Highlight color. Ex: 'rgb(85, 145, 60)'. Defaults are green for desc and red for asc
@@ -23,9 +23,9 @@ ExampleS
         showTitleTags:          true,                //bit
         blendColor:             false 
     }
-    
+ ```   
 2. You can define just the tableId and every column will be highlighted
-
+```
    highlightByValue({tableId: 'myTable'})
-   
+```   
 3. The default settings are defined in the comments at the top of the .js file. Override only those you want.
