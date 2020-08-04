@@ -29,3 +29,14 @@ ExampleS
    highlightByValue({tableId: 'myTable'})
 ```   
 3. The default settings are defined in the comments at the top of the .js file. Override only those you want.
+
+4. Use multiple passes on the same table to highlight different values
+
+```
+highlightByValue({tableId: 'myTable', numberOfCells:3}) //highlights the highest 3 values in each column using default green
+
+highlightByValue({tableId: 'myTable', numberOfCells:3, blendColor:true}) //highlights the lowest 3 values in each column using default red and blends the colors that intersect
+
+highlightByValue({tableId: 'myTable', dataGroup: 'rows', dataGroupsToHighlight:[3], color:'rbg(0,0,255)'}) //highlights the 3rd row blue from highest to lowest
+
+```
