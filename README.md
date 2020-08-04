@@ -1,6 +1,6 @@
 # highlightByValue
 
-Higlights all or specific highest and lowest values in table columns or rows.
+Highlights all or specific highest and lowest values in table columns or rows.
 
 ExampleS
 
