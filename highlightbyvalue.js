@@ -1,18 +1,16 @@
-
-
-
-
-
 ;function highlightByValue(options) {
      "use strict";
 /*
  BUGS:
-    
+    :cssClassName cannot set text color or BG color because they are specified directly on the TD element. This may be a problem. I was trying to Grey-out zero values based on them beeing the lowest. If this is the only use-case then I might be able to solve it with a flag that applies a class to zero values when they are ignored
  IMPROVEMENTS:
     :some of the settings are named poorly
     :only reference NOT default options so that any unexpected values revert to default
     :make a mode that complains when something isn't right instead of how it currently ignores it
     :is it possible to produce a diaginal gradient for a cell when another color is added to it? Create a bit that blends color with existing color
+    :add option to specify a specific class for zero values or for unevaluated cells
+    :maybe ignoreZero should just set the text color to gray
+
 
 */
    // Default settings and variables, can be overriden by user
@@ -28,6 +26,7 @@
         
         autoContrastingText:    true,                //bit Will auto-whiten text on dark colors  
         colorGradeMaxLight:     0,                   //num [1 - 90] maximum percentage of lightness to applied to original color (highest or lowest value). 0 will auto-grade
+        ignoreZero:             false,                        
         dataAttribute:          null,                //str Name of custom data atribute in your table. "https://www.w3schools.com/tags/att_data-.asp" Highlight based on values on data attribute instead of cell
         showTitleTags:          true,                //bit 
     }
@@ -64,7 +63,7 @@
                     } else {
                         var cellValue = rows[i].cells[j].innerHTML.replace(/[^0-9\.-]+/g, "");
                     }
-                    cellValue = !cellValue ? null : Number(cellValue);
+                    cellValue = !cellValue || (settings.ignoreZero && cellValue ==0) ? null : Number(cellValue);
                     dataGroupArrays[k].push(cellValue);
                   
                 } catch (err) {
