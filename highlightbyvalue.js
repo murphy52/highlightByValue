@@ -1,64 +1,60 @@
 
+
+
+
+
 ;function highlightByValue(options) {
      "use strict";
+/*
+ BUGS:
+    
+ IMPROVEMENTS:
+    :some of the settings are named poorly
+    :only reference NOT default options so that any unexpected values revert to default
+    :make a mode that complains when something isn't right instead of how it currently ignores it
+    :is it possible to produce a diaginal gradient for a cell when another color is added to it? Create a bit that blends color with existing color
 
+*/
    // Default settings and variables, can be overriden by user
     var defaults = {
-        tableId :               '',                  //str Required. ID of table
-        color:                  '',                  //rgb Highlight color rgb(85, 145, 60)
+        tableId :               '',                  //str REQUIRED. ID of table
+        color:                  '',                  //rgb Highlight color. Ex: 'rgb(85, 145, 60)'. Defaults are green for desc and red for asc
         direction:              'desc',              //str "desc" will highlight the top (n) values. "asc" the bottom (n)
         numberOfCells:          0,                   //num The number of rows or columns to highlight. 0 for all 
         dataGroupsToHighlight:  [0],                 //arr Specific columns or rows to highlight. Ex: [2,3,4]. [0] will highlight all
         dataGroup:              'columns',           //str "rows" or "columns"
         cssClassName:           '',                  //str CSS class that will be applied after background color and before auto-whiten
         skipFirst:              false,               //bit skip first dataGroup (column or row)
-        autoContrastingText:    true,                //bit Will auto-whiten text on dark colors  
-        colorGradeMaxLight:     90,                  //num [0 - 90] maximum percentage of lightness to applied to original color (highest or lowest value)
         
+        autoContrastingText:    true,                //bit Will auto-whiten text on dark colors  
+        colorGradeMaxLight:     0,                   //num [1 - 90] maximum percentage of lightness to applied to original color (highest or lowest value). 0 will auto-grade
         dataAttribute:          null,                //str Name of custom data atribute in your table. "https://www.w3schools.com/tags/att_data-.asp" Highlight based on values on data attribute instead of cell
         showTitleTags:          true,                //bit 
     }
-     
-    //Declares the settings which should be used by the program
+
     var settings = Object.assign(defaults, options);//merges options with defaults; 
     var tableObj = document.querySelector("table#" + settings.tableId);
     settings.color = settings.color ? settings.color : (settings.direction == 'asc' ? 'rgb(145, 0, 0)' : 'rgb(85, 145, 60)');//default colors
+    var label = settings.direction == 'asc' ? 'Lowest' : 'Highest';
 
-    // https://github.com/PimpTrizkit/PJs/wiki/12.-Shade,-Blend-and-Convert-a-Web-Color-(pSBC.js)#stackoverflow-archive-begin
-    const RGB_Log_Shade=(p,c)=>{
-        var i=parseInt,r=Math.round,[a,b,c,d]=c.split(","),P=p<0,t=P?0:p*255**2,P=P?1+p:1-p;
-        return"rgb"+(d?"a(":"(")+r((P*i(a[3]=="a"?a.slice(5):a.slice(4))**2+t)**0.5)+","+r((P*i(b)**2+t)**0.5)+","+r((P*i(c)**2+t)**0.5)+(d?","+d:")");
-    }///
-
-    const contrastingTextColor=(rgb)=>{
-         var m = rgb.match(/^rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/i);
-        if(m) {
-            var yiq = ((m[1]*299)+(m[2]*587)+(m[3]*114))/1000;
-            return (yiq >= 128) ? 'black' : 'white';
-        }
-    }
-
-    
-    const parseTable = ()=>{
+    const main=()=>{
         var row,
             rows = tableObj.rows;
         var cell, cells;
-        var dataGroupArrays = [];
-        var label = settings.direction == 'asc' ? 'Lowest' : 'Highest';
         var arrayHeight = settings.dataGroup == 'columns' ? rows[0].cells.length : rows.length;
         var arraywidth = settings.dataGroup == 'columns' ? rows.length : rows[0].cells.length;
-       
+        settings.numberOfCells = settings.numberOfCells ? Math.min(rows.length,settings.numberOfCells) : arraywidth;  //if 0 then highlight the whole table
+        settings.colorGradeMaxLight = settings.colorGradeMaxLight == 0 ? Math.min(90,((settings.numberOfCells*0.8)+1.8)*10) : settings.colorGradeMaxLight; //if colorGradeMaxLight set to default (0) then auto calculate 
+
         //init an array for each dataGroup
+        var dataGroupArrays = [];
         for (var i = 0; i < arrayHeight; i++) {
             dataGroupArrays[i] = [];
         }
 
-       settings.numberOfCells = settings.numberOfCells ? settings.numberOfCells : arraywidth;  //if 0 then highlight the whole table
-
-         
         //add values to each data array for each row (converts to number or ignores)
         for (var i = 0; i < rows.length; i++) {
-             if(settings.skipFirst && i === 0 && settings.dataGroup == 'columns'){continue;}
+            if(settings.skipFirst && i === 0 && settings.dataGroup == 'columns'){continue;}
             for (var j = 0; j < rows[i].cells.length; j++) {
                 if(settings.skipFirst && j === 0 && settings.dataGroup == 'rows'){continue;}
                 var k = settings.dataGroup == 'columns' ? j : i;
@@ -104,7 +100,7 @@
                             rows[i].cells[j].style.backgroundColor = RGB_Log_Shade(colorGradePercent,settings.color); //apply graded color
                             if(settings.autoContrastingText){rows[i].cells[j].style.color = contrastingTextColor(RGB_Log_Shade(colorGradePercent,settings.color))}; //auto-whiten text
                             if(settings.showTitleTags){rows[i].cells[j].title = (positionFound > 0) ? cellValue + ' (rank ' + (positionFound+1)+')' : cellValue + ' (' + label + ')'}; //set title tags
-                            rows[i].cells[j].classList.add(settings.cssClassName); //apply css class
+                            if(settings.cssClassName){rows[i].cells[j].classList.add(settings.cssClassName)}; //apply css class
                         }
                     }
                 } catch (err) {console.log(err)}
@@ -112,5 +108,18 @@
         }
     }
 
-    if(tableObj){parseTable(tableObj)};
+    // COLOR FUNCTIONS https://github.com/PimpTrizkit/PJs/wiki/12.-Shade,-Blend-and-Convert-a-Web-Color-(pSBC.js)#stackoverflow-archive-begin
+    const RGB_Log_Shade=(p,c)=>{
+        var i=parseInt,r=Math.round,[a,b,c,d]=c.split(","),P=p<0,t=P?0:p*255**2,P=P?1+p:1-p;
+        return"rgb"+(d?"a(":"(")+r((P*i(a[3]=="a"?a.slice(5):a.slice(4))**2+t)**0.5)+","+r((P*i(b)**2+t)**0.5)+","+r((P*i(c)**2+t)**0.5)+(d?","+d:")");
+    }///
+    const contrastingTextColor=(rgb)=>{
+         var m = rgb.match(/^rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/i);
+        if(m) {
+            var yiq = ((m[1]*299)+(m[2]*587)+(m[3]*114))/1000;
+            return (yiq >= 128) ? 'black' : 'white';
+        }
+    }///
+
+    if(tableObj){main(tableObj)};
 };
