@@ -21,6 +21,7 @@
 
     }
 
+
     var defaultSet = new Set(Object.keys(defaults));
     var validateOptions = [...new Set([...Object.keys(options)].filter(x => !defaultSet.has(x)))];
     if(validateOptions.length){console.log("The following options are not valid and will be ignored"); console.log(validateOptions);}
@@ -126,7 +127,11 @@
         var existingColor = window.getComputedStyle(elem, null).getPropertyValue("background-color");
         direction = direction == 'desc' ? 'to top' : 'to bottom';
         //var existingColor = elem.style.backgroundColor;
-        elem.style = "background-image:linear-gradient(" + direction + " left," + existingColor + "," + color +");"
+        if(existingColor != 'rgba(0, 0, 0, 0)'){
+            elem.style = "background-image:linear-gradient(" + direction + " left," + existingColor + "," + color +");"
+        }else{
+            elem.style.backgroundColor = color;
+        }
     }
 
     if(tableObj){main(tableObj)};
