@@ -1,18 +1,6 @@
 ;function highlightByValue(options) {
      "use strict";
-/*
- BUGS:
-    :cssClassName cannot set text color or BG color because they are specified directly on the TD element. This may be a problem. I was trying to Grey-out zero values based on them beeing the lowest. If this is the only use-case then I might be able to solve it with a flag that applies a class to zero values when they are ignored
- IMPROVEMENTS:
-    :some of the settings are named poorly
-    :only reference NOT default options so that any unexpected values revert to default
-    :make a mode that complains when something isn't right instead of how it currently ignores it
-    :is it possible to produce a diaginal gradient for a cell when another color is added to it? Create a bit that blends color with existing color
-    :add option to specify a specific class for zero values or for unevaluated cells
-    :maybe ignoreZero should just set the text color to gray
 
-
-*/
    // Default settings and variables, can be overriden by user
     var defaults = {
         tableId :               '',                  //str REQUIRED. ID of table
@@ -28,13 +16,20 @@
         colorGradeMaxLight:     0,                   //num [1 - 90] maximum percentage of lightness to applied to original color (highest or lowest value). 0 will auto-grade
         ignoreZero:             false,                        
         dataAttribute:          null,                //str Name of custom data atribute in your table. "https://www.w3schools.com/tags/att_data-.asp" Highlight based on values on data attribute instead of cell
-        showTitleTags:          true,                //bit 
+        showTitleTags:          true,                //bit
+        blendColor:             false,               //bit Blends color with existing cell color. Useful when calling function twice on the same table
+
     }
+
+    var defaultSet = new Set(Object.keys(defaults));
+    var validateOptions = [...new Set([...Object.keys(options)].filter(x => !defaultSet.has(x)))];
+    if(validateOptions.length){console.log("The following options are not valid and will be ignored"); console.log(validateOptions);}
 
     var settings = Object.assign(defaults, options);//merges options with defaults; 
     var tableObj = document.querySelector("table#" + settings.tableId);
     settings.color = settings.color ? settings.color : (settings.direction == 'asc' ? 'rgb(145, 0, 0)' : 'rgb(85, 145, 60)');//default colors
     var label = settings.direction == 'asc' ? 'Lowest' : 'Highest';
+
 
     const main=()=>{
         var row,
@@ -94,11 +89,19 @@
                         cellValue = !cellValue ? NaN : Number(cellValue);
                         var positionFound = dataGroupArrays[k].indexOf(cellValue);
                         var colorGradeIncrement = settings.numberOfCells <= 1 ? 0 : settings.colorGradeMaxLight / (settings.numberOfCells-1);
+                        var existingTitle = (settings.blendColor && rows[i].cells[j].title) ? rows[i].cells[j].title + " : " : "";//to combine with title we are adding
+
                         if (positionFound >= 0) {
                             var colorGradePercent = (positionFound*colorGradeIncrement)/100;
-                            rows[i].cells[j].style.backgroundColor = RGB_Log_Shade(colorGradePercent,settings.color); //apply graded color
+
+                            if(settings.blendColor){
+                                blendWithBackgroundColor(rows[i].cells[j],RGB_Log_Shade(colorGradePercent,settings.color,settings.diretion));
+                            }else{rows[i].cells[j].style.backgroundColor = RGB_Log_Shade(colorGradePercent,settings.color);} //apply graded color 
+                            
+
+
                             if(settings.autoContrastingText){rows[i].cells[j].style.color = contrastingTextColor(RGB_Log_Shade(colorGradePercent,settings.color))}; //auto-whiten text
-                            if(settings.showTitleTags){rows[i].cells[j].title = (positionFound > 0) ? cellValue + ' (rank ' + (positionFound+1)+')' : cellValue + ' (' + label + ')'}; //set title tags
+                            if(settings.showTitleTags){rows[i].cells[j].title = (positionFound > 0) ? existingTitle+cellValue + ' (rank ' + (positionFound+1)+')' : existingTitle+cellValue + ' (' + label + ')'}; //set title tags
                             if(settings.cssClassName){rows[i].cells[j].classList.add(settings.cssClassName)}; //apply css class
                         }
                     }
@@ -119,6 +122,12 @@
             return (yiq >= 128) ? 'black' : 'white';
         }
     }///
+    const blendWithBackgroundColor=(elem, color, direction)=>{
+        var existingColor = window.getComputedStyle(elem, null).getPropertyValue("background-color");
+        direction = direction == 'desc' ? 'to top' : 'to bottom';
+        //var existingColor = elem.style.backgroundColor;
+        elem.style = "background-image:linear-gradient(" + direction + " left," + existingColor + "," + color +");"
+    }
 
     if(tableObj){main(tableObj)};
 };
