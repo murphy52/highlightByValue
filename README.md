@@ -2,7 +2,7 @@
 
 Highlights all or specific highest and lowest values in table columns or rows.
 
-ExampleS
+Examples
 
 1. Here is an example with every setting defined
 ```
